@@ -85,8 +85,8 @@ const CARS = [
     displacement: "400 CU IN", hp: "175 BHP", torque: "305 LB·FT",
     config: "V8 · SMALL BLOCK", weight: "4,215 LBS", status: "OWNED",
     shape: "scan",              // "scan" = expects PLY/GLB, no procedural fallback
-    plyPath: null,   // ← your Scaniverse scan goes here
-    glbPath: "/models/caprice.glb",
+    plyPath: "/models/caprice.ply",   // ← your Scaniverse scan goes here
+    glbPath: null,
     stats: { power: 68, torque: 72, handling: 55, rawness: 78, sound: 82 },
     desc: "Full-size American iron. The kind of car that owns every road it touches.",
     episodes: ["S02·E06 — Caprice Cold Start","S02·E07 — Full Size Fury"],
@@ -279,7 +279,10 @@ function buildSceneForCar(car){
           model.traverse(c=>{
             if(c.isMesh){
               c.castShadow=true; c.receiveShadow=true;
-              if(c.material){ c.material.metalness=0.3; c.material.roughness=0.6; }
+              if(c.material){
+              const hasAnyMap=c.material.map||c.material.normalMap||c.material.roughnessMap||c.material.metalnessMap;
+              if(!hasAnyMap){c.material.metalness=0.2;c.material.roughness=0.8;}
+            }
             }
           });
           gltfCache[cacheKey] = model;
@@ -481,6 +484,50 @@ function StatRow({label,val,delay}){
   );
 }
 
+// ─── QR CODE COMPONENT ────────────────────────────────────────────────────────
+function QRCode({ url, size = 120 }){
+  const canvasRef = useRef(null);
+  const [ready, setReady] = useState(false);
+
+  useEffect(()=>{
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.min.js";
+    script.onload = ()=>{
+      try{
+        const qr = window.qrcode(0, "M");
+        qr.addData(url);
+        qr.make();
+        const canvas = canvasRef.current;
+        if(!canvas) return;
+        const ctx = canvas.getContext("2d");
+        const count = qr.getModuleCount();
+        const cell  = size / count;
+        canvas.width  = size;
+        canvas.height = size;
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, size, size);
+        ctx.fillStyle = "#080808";
+        for(let r=0;r<count;r++)
+          for(let c=0;c<count;c++)
+            if(qr.isDark(r,c)) ctx.fillRect(c*cell, r*cell, cell, cell);
+        setReady(true);
+      } catch(e){}
+    };
+    document.head.appendChild(script);
+    return ()=>{ try{ document.head.removeChild(script); }catch(e){} };
+  }, [url, size]);
+
+  return(
+    <div style={{padding:6, background:"#fff", borderRadius:4}}>
+      <canvas ref={canvasRef}
+        style={{display:"block", width:size, height:size,
+          imageRendering:"pixelated", borderRadius:2,
+          opacity:ready?1:0, transition:"opacity 0.4s"}}
+      />
+    </div>
+  );
+}
+
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 export default function WhiteStripeMadness(){
   const [carIdx,    setCarIdx]    = useState(0);
@@ -548,6 +595,12 @@ export default function WhiteStripeMadness(){
     clearTimeout(autoTimer.current);
     scheduleNext();
   };
+
+  // QR overlay — shows scannable link to mobile app
+  const [showQR, setShowQR] = useState(true);
+  const qrUrl = typeof window !== "undefined"
+    ? window.location.origin + "/mobile"
+    : "https://wsm.vercel.app/mobile";
 
   return(
     <div style={{width:"100vw",height:"100vh",overflow:"hidden",background:"#080808",color:B.white,fontFamily:"'Barlow Condensed',sans-serif",position:"relative",userSelect:"none"}}>
@@ -787,6 +840,47 @@ export default function WhiteStripeMadness(){
           })}
         </div>
       </div>
+
+      {/* ── QR OVERLAY ── */}
+      {showQR && (
+        <div style={{
+          position:"absolute", bottom:90, right:20, zIndex:50,
+          display:"flex", flexDirection:"column", alignItems:"center", gap:6,
+        }}>
+          <div style={{
+            background:"rgba(8,8,8,0.92)",
+            border:`1px solid rgba(204,24,0,0.4)`,
+            borderRadius:6, padding:14,
+            display:"flex", flexDirection:"column", alignItems:"center", gap:10,
+            backdropFilter:"blur(8px)",
+            boxShadow:`0 0 24px rgba(204,24,0,0.2)`,
+          }}>
+            {/* Stripe */}
+            <div style={{display:"flex",width:"100%",height:3,borderRadius:1}}>
+              <div style={{flex:1,background:B.red}}/><div style={{flex:1,background:B.white}}/><div style={{flex:1,background:B.red}}/>
+            </div>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,letterSpacing:"0.3em",fontWeight:800,color:"rgba(255,255,255,0.45)",textTransform:"uppercase"}}>
+              SKENUJ A POZRI SI TO
+            </div>
+            {/* QR code canvas */}
+            <QRCode url={qrUrl} size={120}/>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:11,letterSpacing:"0.15em",fontWeight:900,color:B.red,textTransform:"uppercase"}}>
+              @whitestripesmadness
+            </div>
+            <div style={{display:"flex",alignItems:"center",gap:6}}>
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2" strokeLinecap="round">
+                <rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="rgba(255,255,255,0.35)" stroke="none"/>
+              </svg>
+              <span style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:9,letterSpacing:"0.15em",color:"rgba(255,255,255,0.25)",fontWeight:700}}>INSTAGRAM · YOUTUBE</span>
+            </div>
+          </div>
+          <button onClick={()=>setShowQR(false)} style={{
+            background:"none",border:"none",cursor:"pointer",
+            fontFamily:"'Barlow Condensed',sans-serif",
+            fontSize:8,letterSpacing:"0.2em",color:"rgba(255,255,255,0.15)",fontWeight:700,
+          }}>SKRYŤ ×</button>
+        </div>
+      )}
 
       {/* Corner decorations */}
       <div style={{position:"absolute",top:0,right:0,zIndex:2,pointerEvents:"none"}}>
