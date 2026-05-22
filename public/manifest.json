@@ -1,0 +1,25 @@
+{
+  "name": "White Stripes Madness",
+  "short_name": "WSM",
+  "description": "V8 engines. Cold starts. Classic American iron. Car showcase by White Stripes Madness.",
+  "start_url": "/mobile",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080808",
+  "theme_color": "#CC1800",
+  "categories": ["entertainment", "lifestyle"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ],
+  "screenshots": [
+    { "src": "/screenshots/mobile.png", "sizes": "390x844", "type": "image/png", "form_factor": "narrow" }
+  ],
+  "shortcuts": [
+    {
+      "name": "Instagram",
+      "url": "https://instagram.com/whitestripesmadness",
+      "description": "Follow us on Instagram"
+    }
+  ]
+}
