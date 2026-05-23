@@ -656,7 +656,7 @@ export default function WhiteStripeMadnessMobile(){
         {PANELS.map(p=>{
           const active = panel === p;
           return(
-            <button key={p} onClick={()=>{ panelCycle.current=false; setPanel(p); }}
+            <button key={p} onClick={()=>setPanel(p)}
               style={{
                 flex:1, padding:"9px 0",
                 background:active ? "rgba(204,24,0,0.15)" : "transparent",
