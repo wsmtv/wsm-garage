@@ -269,11 +269,13 @@ function buildSceneForCar(car){
             sceneCache[car.id].scene.add(model);
             sceneCache[car.id].mesh = model;
           }
-        }, null, ()=>{}); // on error keep procedural placeholder
+        }, null, (err)=>{ console.error('[WSM] GLB load FAILED:', absoluteUrl, err); }); // on error keep procedural placeholder
 
       } else {
         // ── GLB/GLTF LOADER ──
+        console.log('[WSM] Loading GLB:', absoluteUrl);
         new GLTFLoader().load(absoluteUrl,(gltf)=>{
+          console.log('[WSM] GLB loaded OK:', absoluteUrl);
           const model = gltf.scene;
           positionModel(model, cfg);
           model.traverse(c=>{
@@ -291,7 +293,7 @@ function buildSceneForCar(car){
             sceneCache[car.id].scene.add(model);
             sceneCache[car.id].mesh = model;
           }
-        }, null, ()=>{});
+        }, null, (err)=>{ console.error('[WSM] GLB load FAILED:', absoluteUrl, err); });
       }
     }
   }
