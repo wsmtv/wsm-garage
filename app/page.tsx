@@ -85,8 +85,8 @@ const CARS = [
     displacement: "400 CU IN", hp: "175 BHP", torque: "305 LB·FT",
     config: "V8 · SMALL BLOCK", weight: "4,215 LBS", status: "OWNED",
     shape: "scan",              // "scan" = expects PLY/GLB, no procedural fallback
-    plyPath: "/models/caprice.ply",   // ← your Scaniverse scan goes here
-    glbPath: null,
+    plyPath: null,   // ← your Scaniverse scan goes here
+    glbPath: "/models/caprice.glb",
     stats: { power: 68, torque: 72, handling: 55, rawness: 78, sound: 82 },
     desc: "Full-size American iron. The kind of car that owns every road it touches.",
     episodes: ["S02·E06 — Caprice Cold Start","S02·E07 — Full Size Fury"],
