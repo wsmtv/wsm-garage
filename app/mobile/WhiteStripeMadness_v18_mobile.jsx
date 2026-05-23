@@ -418,13 +418,48 @@ function FollowScreen({ onBack }){
 export default function WhiteStripeMadnessMobile(){
   const [carIdx,     setCarIdx]     = useState(0);
   const [panel,      setPanel]      = useState("STATS");
-  const [showFollow, setShowFollow] = useState(false);
+  const [showFollow,  setShowFollow]  = useState(false);
+  const [showInstall, setShowInstall] = useState(false);
+  const [installEvt,  setInstallEvt]  = useState(null);  // beforeinstallprompt event
   const autoTimer  = useRef(null);
   const panelTimer = useRef(null);
   const panelCycle = useRef(true);
   // swipe
   const touchStart = useRef(null);
   const car = CARS[carIdx];
+
+  // Capture PWA install prompt event (Android Chrome)
+  useEffect(()=>{
+    const handler = e => {
+      e.preventDefault();
+      setInstallEvt(e);
+      setShowInstall(true); // show our custom install banner
+    };
+    window.addEventListener('beforeinstallprompt', handler);
+    return () => window.removeEventListener('beforeinstallprompt', handler);
+  }, []);
+
+  const triggerInstall = async () => {
+    if(installEvt){
+      // Android — use native prompt
+      installEvt.prompt();
+      const { outcome } = await installEvt.userChoice;
+      if(outcome === 'accepted') setShowInstall(false);
+    } else {
+      // iOS Safari — show manual instructions
+      setShowIOSGuide(true);
+    }
+  };
+
+  const [showIOSGuide, setShowIOSGuide] = useState(false);
+  
+  // Show install banner after 3s if not already installed
+  useEffect(()=>{
+    // Don't show if already running as PWA
+    if(window.matchMedia('(display-mode: standalone)').matches) return;
+    const t = setTimeout(()=> setShowInstall(true), 3000);
+    return () => clearTimeout(t);
+  }, []);
 
   const scheduleNext = useCallback(()=>{
     clearTimeout(autoTimer.current);
@@ -493,6 +528,69 @@ export default function WhiteStripeMadnessMobile(){
 
       {/* Follow screen overlay */}
       {showFollow && <FollowScreen onBack={()=>{ setShowFollow(false); setCarIdx(0); scheduleNext(); }}/>}
+
+      {/* ── iOS INSTALL GUIDE ── */}
+      {showIOSGuide && (
+        <div style={{position:"absolute",inset:0,zIndex:200,background:"rgba(0,0,0,0.92)",display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"flex-end",padding:"0 0 40px"}}>
+          <div style={{background:"#111",border:`1px solid ${B.red}`,borderRadius:12,padding:24,maxWidth:320,width:"100%",textAlign:"center"}}>
+            <div style={{fontSize:14,fontWeight:800,letterSpacing:"0.15em",color:B.white,marginBottom:16}}>PRIDAJ NA PLOCHU</div>
+            {/* Step 1 */}
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14,textAlign:"left"}}>
+              <div style={{width:32,height:32,borderRadius:"50%",background:B.red,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:14,fontWeight:900,color:B.white}}>1</div>
+              <div style={{fontSize:13,color:"rgba(255,255,255,0.7)"}}>Klikni na <strong style={{color:B.white}}>Zdieľať</strong> tlačidlo dole v Safari <span style={{fontSize:18}}>⎦↑</span></div>
+            </div>
+            {/* Step 2 */}
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14,textAlign:"left"}}>
+              <div style={{width:32,height:32,borderRadius:"50%",background:B.red,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:14,fontWeight:900,color:B.white}}>2</div>
+              <div style={{fontSize:13,color:"rgba(255,255,255,0.7)"}}>Vyber <strong style={{color:B.white}}>"Pridať na plochu"</strong> <span style={{fontSize:16}}>＋</span></div>
+            </div>
+            {/* Step 3 */}
+            <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:20,textAlign:"left"}}>
+              <div style={{width:32,height:32,borderRadius:"50%",background:B.red,display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,fontSize:14,fontWeight:900,color:B.white}}>3</div>
+              <div style={{fontSize:13,color:"rgba(255,255,255,0.7)"}}>Klikni <strong style={{color:B.white}}>"Pridať"</strong> — appka sa objaví na ploche</div>
+            </div>
+            <button onClick={()=>setShowIOSGuide(false)} style={{width:"100%",padding:"12px 0",background:B.red,border:"none",borderRadius:3,fontFamily:"'Barlow Condensed',sans-serif",fontSize:13,fontWeight:900,letterSpacing:"0.2em",color:B.white,cursor:"pointer"}}>
+              ROZUMIEM
+            </button>
+          </div>
+          {/* Arrow pointing down to Safari bar */}
+          <div style={{marginTop:16,display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+            <span style={{fontSize:11,letterSpacing:"0.2em",color:"rgba(255,255,255,0.4)",fontWeight:700}}>ZDIEĽAŤ JE TU DOLE</span>
+            <span style={{fontSize:24,color:B.red}}>↓</span>
+          </div>
+        </div>
+      )}
+
+      {/* ── INSTALL BANNER ── */}
+      {showInstall && !showFollow && !showIOSGuide && !window?.matchMedia?.('(display-mode: standalone)')?.matches && (
+        <div style={{
+          position:"absolute", bottom:70, left:12, right:12, zIndex:60,
+          background:"linear-gradient(135deg,#111,#1a0500)",
+          border:`1px solid rgba(204,24,0,0.5)`,
+          borderRadius:8, padding:"14px 16px",
+          display:"flex", alignItems:"center", gap:12,
+          boxShadow:`0 0 20px rgba(204,24,0,0.25)`,
+        }}>
+          <img src="/wsm-logo.png" alt="WSM" style={{width:44,height:44,objectFit:"contain",flexShrink:0,filter:"drop-shadow(0 0 6px rgba(204,24,0,0.5))"}} onError={e=>{e.target.style.display="none";}}/>
+          <div style={{flex:1}}>
+            <div style={{fontFamily:"'Barlow Condensed',sans-serif",fontSize:14,fontWeight:900,color:B.white,letterSpacing:"0.08em"}}>PRIDAJ NA PLOCHU</div>
+            <div style={{fontFamily:"'Barlow',sans-serif",fontSize:11,color:"rgba(255,255,255,0.45)",marginTop:2}}>Otvor kedykoľvek ako normálnu appku</div>
+          </div>
+          <div style={{display:"flex",flexDirection:"column",gap:6}}>
+            <button onClick={triggerInstall} style={{
+              padding:"8px 14px", background:B.red, border:"none", borderRadius:3,
+              fontFamily:"'Barlow Condensed',sans-serif", fontSize:11, fontWeight:900,
+              letterSpacing:"0.15em", color:B.white, cursor:"pointer", whiteSpace:"nowrap",
+            }}>INŠTALOVAŤ</button>
+            <button onClick={()=>setShowInstall(false)} style={{
+              padding:"4px 14px", background:"none",
+              border:"1px solid rgba(255,255,255,0.1)", borderRadius:3,
+              fontFamily:"'Barlow Condensed',sans-serif", fontSize:9,
+              letterSpacing:"0.15em", color:"rgba(255,255,255,0.3)", cursor:"pointer",
+            }}>NESKÔR</button>
+          </div>
+        </div>
+      )}
 
       {/* ── TOP BAR ── */}
       <div style={{ flexShrink:0 }}>
