@@ -58,6 +58,33 @@ const CARS = [
     stats:{ power:88, torque:94, rawness:99, sound:98 },
     desc:"350 block bored .030 over. 400 crank. Eagle rods.",
   },
+  {
+    id:5, key:"camaro",
+    make:"CHEVROLET", model:"CAMARO", year:"1971", nickname:"THE MUSCLE",
+    displacement:"396 CU IN", hp:"375 BHP", torque:"415 LB·FT",
+    config:"V8 · BIG BLOCK", weight:"3,675 LBS", status:"OWNED",
+    shape:"scan", plyPath:null, glbPath:"/models/camaro.glb",
+    stats:{ power:88, torque:86, handling:70, rawness:93, sound:95 },
+    desc:"Second gen muscle. Wide stance, big block thunder.",
+  },
+  {
+    id:6, key:"mustang",
+    make:"FORD", model:"MUSTANG", year:"1968", nickname:"THE PONY",
+    displacement:"390 CU IN", hp:"325 BHP", torque:"427 LB·FT",
+    config:"V8 · FE BIG BLOCK", weight:"3,125 LBS", status:"OWNED",
+    shape:"scan", plyPath:null, glbPath:"/models/mustang.glb",
+    stats:{ power:82, torque:84, handling:72, rawness:88, sound:91 },
+    desc:"Fastback legend. The car that started the pony wars.",
+  },
+  {
+    id:7, key:"c9",
+    make:"CHEVROLET", model:"CORVETTE C9", year:"2023", nickname:"THE FUTURE",
+    displacement:"6.2L CU IN", hp:"670 BHP", torque:"460 LB·FT",
+    config:"V8 · LT6 FLAT-PLANE", weight:"3,366 LBS", status:"OWNED",
+    shape:"scan", plyPath:null, glbPath:"/models/c9.glb",
+    stats:{ power:98, torque:92, handling:97, rawness:85, sound:96 },
+    desc:"Mid-engine revolution. America's supercar goes European.",
+  },
 ];
 
 // ─── SHAPE CFG ────────────────────────────────────────────────────────────────
