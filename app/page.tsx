@@ -329,6 +329,10 @@ function Car3DViewer({car}){
   // Create renderer ONCE on mount — also triggers client-side preload of all scenes
   useEffect(()=>{
     const el=mountRef.current;if(!el)return;
+    // Clear cache — SSR may have populated it without window/GLB loading
+    // Reset so GLB loads properly on client
+    Object.keys(sceneCache).forEach(k=>delete sceneCache[k]);
+    Object.keys(gltfCache).forEach(k=>delete gltfCache[k]);
     // Preload all scenes now (client-side only — safe, window exists here)
     CARS.forEach(car=>buildSceneForCar(car));
     const W=el.clientWidth||800,H=el.clientHeight||500;
@@ -359,7 +363,7 @@ function Car3DViewer({car}){
       entry.camera.updateProjectionMatrix();
       renderer.setSize(W,H);
       // Re-apply cfg lookAt after aspect update (camera may have drifted)
-      const cfg=SHAPE_CFG[car.shape]||SHAPE_CFG.corvette;
+      const cfg=SHAPE_CFG[car.key]||SHAPE_CFG[car.shape]||SHAPE_CFG.scan;
       entry.camera.position.set(0,cfg.camY,cfg.camZ);
       entry.camera.lookAt(0,cfg.lookY,0);
     }
