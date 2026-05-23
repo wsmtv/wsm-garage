@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import * as THREE from "three";
 import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { PLYLoader } from "three/examples/jsm/loaders/PLYLoader";
@@ -421,9 +421,7 @@ export default function WhiteStripeMadnessMobile(){
   const [showFollow,  setShowFollow]  = useState(false);
   const [showInstall, setShowInstall] = useState(false);
   const [installEvt,  setInstallEvt]  = useState(null);  // beforeinstallprompt event
-  const autoTimer  = useRef(null);
-  const panelTimer = useRef(null);
-  const panelCycle = useRef(true);
+
   // swipe
   const touchStart = useRef(null);
   const car = CARS[carIdx];
@@ -461,33 +459,10 @@ export default function WhiteStripeMadnessMobile(){
     return () => clearTimeout(t);
   }, []);
 
-  const scheduleNext = useCallback(()=>{
-    clearTimeout(autoTimer.current);
-    autoTimer.current = setTimeout(()=>{
-      const next = (carIdx + 1) % CARS.length;
-      if(next === 0) setShowFollow(true); // after last car → follow screen
-      else setCarIdx(next);
-    }, AUTO_INTERVAL);
-  }, [carIdx]);
-
-  useEffect(()=>{ scheduleNext(); return()=>clearTimeout(autoTimer.current); }, [carIdx]);
-
-  useEffect(()=>{
-    panelCycle.current = true;
-    setPanel("STATS");
-    clearInterval(panelTimer.current);
-    panelTimer.current = setInterval(()=>{
-      if(!panelCycle.current) return;
-      setPanel(p => PANELS[(PANELS.indexOf(p)+1) % PANELS.length]);
-    }, AUTO_INTERVAL / PANELS.length);
-    return()=>clearInterval(panelTimer.current);
-  }, [carIdx]);
-
+  // Mobile: NO auto-cycle — user controls manually
   const goTo = i=>{
     if(i === carIdx) return;
     setCarIdx(i);
-    clearTimeout(autoTimer.current);
-    scheduleNext();
   };
 
   // Swipe handler
@@ -527,7 +502,7 @@ export default function WhiteStripeMadnessMobile(){
       `}</style>
 
       {/* Follow screen overlay */}
-      {showFollow && <FollowScreen onBack={()=>{ setShowFollow(false); setCarIdx(0); scheduleNext(); }}/>}
+      {showFollow && <FollowScreen onBack={()=>{ setShowFollow(false); setCarIdx(0); }}/>}
 
       {/* ── iOS INSTALL GUIDE ── */}
       {showIOSGuide && (
@@ -744,14 +719,7 @@ export default function WhiteStripeMadnessMobile(){
       {/* ── BOTTOM NAV — car dots + progress ── */}
       <div style={{ flexShrink:0, background:"rgba(0,0,0,0.8)",
         borderTop:`1px solid ${B.dim}`, paddingBottom:"env(safe-area-inset-bottom,0px)" }}>
-        {/* Progress bar */}
-        <div style={{ height:2, background:"rgba(255,255,255,0.04)" }}>
-          <div key={carIdx} style={{
-            height:"100%", background:`linear-gradient(90deg,${B.redDim},${B.red})`,
-            animation:`wsm-progress ${AUTO_INTERVAL}ms linear forwards`,
-            width:"0%", boxShadow:`0 0 6px ${B.red}`,
-          }}/>
-        </div>
+
         <div style={{ display:"flex", alignItems:"stretch", height:58 }}>
           {/* Prev */}
           <button onClick={()=>goTo((carIdx-1+CARS.length)%CARS.length)}
