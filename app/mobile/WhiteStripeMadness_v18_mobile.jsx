@@ -154,7 +154,7 @@ function buildSceneForCar(car){
   mesh.position.y = cfg.meshY;
   scene.add(mesh);
 
-  const entry = { scene, camera, ring, disc, mesh, rotY:-0.6, rotX:0 };
+  const entry = { scene, camera, ring, disc, mesh, rotY:-0.6, rotX:0, zoom:1.0 };
   sceneCache[car.id] = entry;
 
   const modelPath = car.plyPath || car.glbPath;
@@ -221,7 +221,7 @@ function Car3DViewer({ car }){
   const mountRef = useRef(null);
   const rafRef   = useRef(null);
   const rendRef  = useRef(null);
-  const dragRef  = useRef({ isDrag:false, lastX:0, lastY:0 });
+  const dragRef  = useRef({ isDrag:false, lastX:0, lastY:0, pinchDist:null });
 
   useEffect(()=>{
     const el = mountRef.current; if(!el) return;
@@ -260,18 +260,42 @@ function Car3DViewer({ car }){
       if(!drag.isDrag) entry.rotY += 0.007;
       entry.mesh.rotation.y = entry.rotY;
       entry.mesh.rotation.x = entry.rotX;
+      // Apply zoom by moving camera closer/further
+      const cfg2 = SHAPE_CFG[car.key] || SHAPE_CFG[car.shape] || SHAPE_CFG.scan;
+      entry.camera.position.z = cfg2.camZ / entry.zoom;
       entry.ring.rotation.z += 0.002;
       renderer.render(entry.scene, entry.camera);
     };
     tick();
   }, [car.id]);
 
+  const getPinchDist = touches =>
+    Math.hypot(touches[0].clientX-touches[1].clientX, touches[0].clientY-touches[1].clientY);
+
   const dn = e=>{
+    if(e.touches && e.touches.length === 2){
+      // Two fingers — start pinch zoom
+      dragRef.current.pinchDist = getPinchDist(e.touches);
+      dragRef.current.isDrag = false;
+      return;
+    }
     const x = e.clientX ?? e.touches?.[0]?.clientX;
     const y = e.clientY ?? e.touches?.[0]?.clientY;
-    dragRef.current = { isDrag:true, lastX:x, lastY:y, moved:false };
+    dragRef.current = { isDrag:true, lastX:x, lastY:y, moved:false, pinchDist:null };
   };
   const mv = e=>{
+    // Pinch zoom — two fingers
+    if(e.touches && e.touches.length === 2){
+      const dist = getPinchDist(e.touches);
+      const entry = sceneCache[car.id];
+      if(entry && dragRef.current.pinchDist){
+        const scale = dist / dragRef.current.pinchDist;
+        entry.zoom = Math.max(0.4, Math.min(4.0, entry.zoom * scale));
+      }
+      dragRef.current.pinchDist = dist;
+      e.stopPropagation();
+      return;
+    }
     if(!dragRef.current.isDrag) return;
     const x = e.clientX ?? e.touches?.[0]?.clientX;
     const y = e.clientY ?? e.touches?.[0]?.clientY;
@@ -281,19 +305,28 @@ function Car3DViewer({ car }){
     const entry = sceneCache[car.id];
     if(entry){
       entry.rotY += dx * 0.014;
-      // Clamp vertical rotation so model doesn't flip upside down
       entry.rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, entry.rotX + dy * 0.014));
     }
     dragRef.current.lastX = x;
     dragRef.current.lastY = y;
-    e.stopPropagation(); // prevent swipe while rotating
+    e.stopPropagation();
   };
-  const up = ()=>{ dragRef.current.isDrag = false; };
+  const up = e=>{
+    if(e?.touches?.length === 0) dragRef.current.pinchDist = null;
+    dragRef.current.isDrag = false;
+  };
+
+  const onWheel = e=>{
+    const entry = sceneCache[car.id];
+    if(!entry) return;
+    entry.zoom = Math.max(0.4, Math.min(4.0, entry.zoom * (e.deltaY > 0 ? 0.92 : 1.09)));
+  };
 
   return (
     <div ref={mountRef}
       onMouseDown={dn} onMouseMove={mv} onMouseUp={up} onMouseLeave={up}
       onTouchStart={dn} onTouchMove={mv} onTouchEnd={up}
+      onWheel={onWheel}
       style={{ width:"100%", height:"100%", cursor:"grab", touchAction:"none" }}
     />
   );
