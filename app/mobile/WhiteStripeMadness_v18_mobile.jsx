@@ -154,7 +154,7 @@ function buildSceneForCar(car){
   mesh.position.y = cfg.meshY;
   scene.add(mesh);
 
-  const entry = { scene, camera, ring, disc, mesh, rotY:-0.6 };
+  const entry = { scene, camera, ring, disc, mesh, rotY:-0.6, rotX:0 };
   sceneCache[car.id] = entry;
 
   const modelPath = car.plyPath || car.glbPath;
@@ -221,7 +221,7 @@ function Car3DViewer({ car }){
   const mountRef = useRef(null);
   const rafRef   = useRef(null);
   const rendRef  = useRef(null);
-  const dragRef  = useRef({ isDrag:false, lastX:0 });
+  const dragRef  = useRef({ isDrag:false, lastX:0, lastY:0 });
 
   useEffect(()=>{
     const el = mountRef.current; if(!el) return;
@@ -259,19 +259,34 @@ function Car3DViewer({ car }){
       rafRef.current = requestAnimationFrame(tick);
       if(!drag.isDrag) entry.rotY += 0.007;
       entry.mesh.rotation.y = entry.rotY;
+      entry.mesh.rotation.x = entry.rotX;
       entry.ring.rotation.z += 0.002;
       renderer.render(entry.scene, entry.camera);
     };
     tick();
   }, [car.id]);
 
-  const dn = e=>{ dragRef.current.isDrag=true; dragRef.current.lastX=e.clientX??e.touches?.[0]?.clientX; };
+  const dn = e=>{
+    const x = e.clientX ?? e.touches?.[0]?.clientX;
+    const y = e.clientY ?? e.touches?.[0]?.clientY;
+    dragRef.current = { isDrag:true, lastX:x, lastY:y, moved:false };
+  };
   const mv = e=>{
     if(!dragRef.current.isDrag) return;
     const x = e.clientX ?? e.touches?.[0]?.clientX;
+    const y = e.clientY ?? e.touches?.[0]?.clientY;
+    const dx = x - dragRef.current.lastX;
+    const dy = y - dragRef.current.lastY;
+    if(Math.abs(dx) > 2 || Math.abs(dy) > 2) dragRef.current.moved = true;
     const entry = sceneCache[car.id];
-    if(entry) entry.rotY += (x - dragRef.current.lastX) * 0.014;
+    if(entry){
+      entry.rotY += dx * 0.014;
+      // Clamp vertical rotation so model doesn't flip upside down
+      entry.rotX = Math.max(-Math.PI/2, Math.min(Math.PI/2, entry.rotX + dy * 0.014));
+    }
     dragRef.current.lastX = x;
+    dragRef.current.lastY = y;
+    e.stopPropagation(); // prevent swipe while rotating
   };
   const up = ()=>{ dragRef.current.isDrag = false; };
 
@@ -471,7 +486,7 @@ export default function WhiteStripeMadnessMobile(){
     if(touchStart.current === null) return;
     const dx = e.changedTouches[0].clientX - touchStart.current;
     touchStart.current = null;
-    if(Math.abs(dx) < 40) return; // too small
+    if(Math.abs(dx) < 60) return; // higher threshold to avoid accidental swipe
     if(dx < 0) {
       // swipe left → next
       const next = (carIdx + 1) % CARS.length;
