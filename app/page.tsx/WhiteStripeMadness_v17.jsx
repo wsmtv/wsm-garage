@@ -57,8 +57,8 @@ const CARS = [
     displacement: "427 CU IN", hp: "435 BHP", torque: "460 LB·FT",
     config: "V8 · BIG BLOCK", weight: "3,195 LBS", status: "OWNED",
     shape: "scan",
-    plyPath: null,              // ← drop corvette.ply here when scanned
-    glbPath: null,              // ← or corvette.glb from Blender
+    plyPath: null,
+    glbPath: "/models/corvette.glb",
     stats: { power: 92, torque: 88, handling: 74, rawness: 95, sound: 97 },
     desc: "Coke-bottle curves. Side-pipe snarl. Black as midnight.",
     episodes: ["S01·E03 — Cold Start Ritual","S01·E07 — Side Pipe Swap","S02·E01 — Dyno Day"],
