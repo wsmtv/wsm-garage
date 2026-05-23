@@ -480,20 +480,26 @@ export default function WhiteStripeMadnessMobile(){
     setCarIdx(i);
   };
 
-  // Swipe handler
-  const onTouchStart = e => { touchStart.current = e.touches[0].clientX; };
-  const onTouchEnd   = e => {
+  // Swipe handler — only on bottom nav area, NOT on 3D viewer
+  const swipeBlocked = useRef(false); // true when touch started on 3D viewer
+  const onTouchStart = e => {
+    touchStart.current = e.touches[0].clientX;
+    // Check if touch started inside the 3D viewer div
+    const target = e.target;
+    const viewer = target.closest('[data-viewer="true"]');
+    swipeBlocked.current = !!viewer;
+  };
+  const onTouchEnd = e => {
     if(touchStart.current === null) return;
+    if(swipeBlocked.current) { touchStart.current = null; return; } // ignore — was on 3D viewer
     const dx = e.changedTouches[0].clientX - touchStart.current;
     touchStart.current = null;
-    if(Math.abs(dx) < 60) return; // higher threshold to avoid accidental swipe
+    if(Math.abs(dx) < 60) return;
     if(dx < 0) {
-      // swipe left → next
       const next = (carIdx + 1) % CARS.length;
       if(carIdx === CARS.length - 1) setShowFollow(true);
       else goTo(next);
     } else {
-      // swipe right → prev
       goTo((carIdx - 1 + CARS.length) % CARS.length);
     }
   };
@@ -622,7 +628,7 @@ export default function WhiteStripeMadnessMobile(){
       </div>
 
       {/* ── 3D VIEWER ── */}
-      <div style={{ flex:"0 0 44%", position:"relative", background:"#050505" }}>
+      <div data-viewer="true" style={{ flex:"0 0 44%", position:"relative", background:"#050505" }}>
         {/* BG glow */}
         <div style={{ position:"absolute", inset:0,
           background:"radial-gradient(ellipse 80% 60% at 50% 55%,rgba(80,5,0,0.35) 0%,transparent 70%)",
