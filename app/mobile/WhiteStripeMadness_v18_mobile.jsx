@@ -212,7 +212,7 @@ function buildSceneForCar(car){
   mesh.position.y = cfg.meshY;
   scene.add(mesh);
 
-  const entry = { scene, camera, ring, disc, mesh, rotY:-0.6, rotX:0, zoom:1.0 };
+  const entry = { scene, camera, ring, disc, mesh, rotY:-0.6, rotX:0, zoom:1.0, userTouched:false };
   sceneCache[car.id] = entry;
 
   const modelPath = car.plyPath || car.glbPath;
@@ -302,6 +302,7 @@ function Car3DViewer({ car }){
     cancelAnimationFrame(rafRef.current);
     const renderer = rendRef.current; if(!renderer) return;
     const entry = sceneCache[car.id]; if(!entry) return;
+    entry.userTouched = false; // reset so new car auto-rotates until touched
     const el = mountRef.current;
     if(el){
       const W = el.clientWidth||390, H = el.clientHeight||340;
@@ -315,7 +316,7 @@ function Car3DViewer({ car }){
     const drag = dragRef.current;
     const tick = ()=>{
       rafRef.current = requestAnimationFrame(tick);
-      if(!drag.isDrag) entry.rotY += 0.007;
+      if(!drag.isDrag && !entry.userTouched) entry.rotY += 0.007;
       entry.mesh.rotation.y = entry.rotY;
       entry.mesh.rotation.x = entry.rotX;
       // Apply zoom by moving camera closer/further
@@ -332,7 +333,6 @@ function Car3DViewer({ car }){
 
   const dn = e=>{
     if(e.touches && e.touches.length === 2){
-      // Two fingers — start pinch zoom
       dragRef.current.pinchDist = getPinchDist(e.touches);
       dragRef.current.isDrag = false;
       return;
@@ -340,6 +340,9 @@ function Car3DViewer({ car }){
     const x = e.clientX ?? e.touches?.[0]?.clientX;
     const y = e.clientY ?? e.touches?.[0]?.clientY;
     dragRef.current = { isDrag:true, lastX:x, lastY:y, moved:false, pinchDist:null };
+    // Stop auto-rotation permanently once user touches
+    const entry = sceneCache[car.id];
+    if(entry) entry.userTouched = true;
   };
   const mv = e=>{
     // Pinch zoom — two fingers
