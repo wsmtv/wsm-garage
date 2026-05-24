@@ -85,26 +85,13 @@ const CARS = [
     displacement: "400 CU IN", hp: "175 BHP", torque: "305 LB·FT",
     config: "V8 · SMALL BLOCK", weight: "4,215 LBS", status: "OWNED",
     shape: "scan",              // "scan" = expects PLY/GLB, no procedural fallback
-    plyPath: null,   // ← your Scaniverse scan goes here
-    glbPath: "/models/caprice.glb",
+    plyPath: "/models/caprice.ply",   // ← your Scaniverse scan goes here
+    glbPath: null,
     stats: { power: 68, torque: 72, handling: 55, rawness: 78, sound: 82 },
     desc: "Full-size American iron. The kind of car that owns every road it touches.",
     episodes: ["S02·E06 — Caprice Cold Start","S02·E07 — Full Size Fury"],
   },
 
-  // ── 383 SMALL BLOCK STROKER ENGINE ────────────────────────────────────────
-  {
-    id: 3, key: "sbc",
-    make: "CHEVROLET", model: "383 STROKER", year: "SBC", nickname: "THE HEART",
-    displacement: "383 CU IN", hp: "~430 BHP", torque: "450 LB·FT",
-    config: "SMALL BLOCK · STROKER", weight: "575 LBS", status: "BUILT",
-    shape: "engine", // uses engine cfg for camera framing
-    plyPath: null,
-    glbPath: "/models/engine-block.glb",
-    stats: { power: 88, torque: 94, rawness: 99, sound: 98 },
-    desc: "350 block bored .030 over. 400 crank. Eagle rods.",
-    episodes: ["S02·E02 — Build Start","S02·E05 — First Fire","S02·E08 — Dyno Pull"],
-  },
 
   // ── 1971 CHEVROLET CAMARO ─────────────────────────────────────────────────
   {
@@ -113,8 +100,6 @@ const CARS = [
     displacement: "396 CU IN", hp: "375 BHP", torque: "415 LB·FT",
     config: "V8 · BIG BLOCK", weight: "3,675 LBS", status: "OWNED",
     shape: "scan", plyPath: null, glbPath: "/models/camaro.glb",
-    plyPath: null,
-    glbPath: "/models/camaro.glb",    
     stats: { power: 88, torque: 86, handling: 70, rawness: 93, sound: 95 },
     desc: "Second gen muscle. Wide stance, big block thunder.",
     episodes: ["S03·E01 — Camaro Cold Start","S03·E02 — Big Block Pull"],
@@ -127,8 +112,6 @@ const CARS = [
     displacement: "390 CU IN", hp: "325 BHP", torque: "427 LB·FT",
     config: "V8 · FE BIG BLOCK", weight: "3,125 LBS", status: "OWNED",
     shape: "scan", plyPath: null, glbPath: "/models/mustang.glb",
-    plyPath: null,
-    glbPath: "/models/mustang.glb",   
     stats: { power: 82, torque: 84, handling: 72, rawness: 88, sound: 91 },
     desc: "Fastback legend. The car that started the pony wars.",
     episodes: ["S03·E03 — Mustang Revival","S03·E04 — Pony vs Muscle"],
@@ -141,8 +124,6 @@ const CARS = [
     displacement: "6.2L CU IN", hp: "670 BHP", torque: "460 LB·FT",
     config: "V8 · LT6 FLAT-PLANE", weight: "3,366 LBS", status: "OWNED",
     shape: "scan", plyPath: null, glbPath: "/models/c9.glb",
-    plyPath: null,
-    glbPath: "/models/c9.glb",
     stats: { power: 98, torque: 92, handling: 97, rawness: 85, sound: 96 },
     desc: "Mid-engine revolution. America's supercar goes European.",
     episodes: ["S03·E05 — C9 Reveal","S03·E06 — Track Day"],

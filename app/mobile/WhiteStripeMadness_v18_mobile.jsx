@@ -88,15 +88,7 @@ const CARS = [
     stats:{ power:68, torque:72, handling:55, rawness:78, sound:82 },
     desc:"Full-size American iron. The kind of car that owns every road.",
   },
-  {
-    id:3, key:"sbc",
-    make:"CHEVROLET", model:"383 STROKER", year:"SBC", nickname:"THE HEART",
-    displacement:"383 CU IN", hp:"~430 BHP", torque:"450 LB·FT",
-    config:"SMALL BLOCK · STROKER", weight:"575 LBS", status:"BUILT",
-    shape:"engine", plyPath:null, glbPath:"/models/engine-block.glb",
-    stats:{ power:88, torque:94, rawness:99, sound:98 },
-    desc:"350 block bored .030 over. 400 crank. Eagle rods.",
-  },
+
   {
     id:5, key:"camaro",
     make:"CHEVROLET", model:"CAMARO", year:"1971", nickname:"THE MUSCLE",
@@ -913,7 +905,7 @@ export default function WhiteStripeMadnessMobile(){
           {/* Button scanline */}
           <div style={{position:"absolute",inset:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,0.03) 3px,rgba(255,255,255,0.03) 4px)",pointerEvents:"none"}}/>
           <span style={{fontSize:18}}>▶</span>
-          SELECT — {car.year} {car.model}
+          DRIVE — {car.year} {car.model}
         </button>
       </div>
 
