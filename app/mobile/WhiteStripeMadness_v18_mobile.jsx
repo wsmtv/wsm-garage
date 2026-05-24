@@ -907,8 +907,7 @@ export default function WhiteStripeMadnessMobile(){
         }}>
           {/* Button scanline */}
           <div style={{position:"absolute",inset:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,0.03) 3px,rgba(255,255,255,0.03) 4px)",pointerEvents:"none"}}/>
-          <span style={{fontSize:18}}>▶</span>
-          DRIVE — {car.year} {car.model}
+          JUMP TO REALITY
         </button>
       </div>
 
