@@ -5,6 +5,45 @@ import { GLTFLoader } from "three/examples/jsm/loaders/GLTFLoader";
 import { PLYLoader } from "three/examples/jsm/loaders/PLYLoader";
 import { mergeVertices } from "three/examples/jsm/utils/BufferGeometryUtils";
 
+// ─── SOUND ENGINE — Web Audio API, no external files ─────────────────────────
+function createSound(){
+  let ctx = null;
+  const get = () => {
+    if(!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
+    return ctx;
+  };
+
+  const blip = (freq=440, dur=0.08, vol=0.3, type="square") => {
+    try{
+      const c = get();
+      const o = c.createOscillator();
+      const g = c.createGain();
+      o.connect(g); g.connect(c.destination);
+      o.type = type; o.frequency.setValueAtTime(freq, c.currentTime);
+      g.gain.setValueAtTime(vol, c.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.001, c.currentTime + dur);
+      o.start(c.currentTime); o.stop(c.currentTime + dur);
+    }catch(e){}
+  };
+
+  return {
+    // Short blip when swiping between cars — NFS menu scroll sound
+    swipe: () => {
+      blip(320, 0.06, 0.2, "square");
+      setTimeout(()=>blip(480, 0.04, 0.15, "square"), 40);
+    },
+    // Confirm/select sound — two-tone rising beep
+    select: () => {
+      blip(440, 0.08, 0.25, "square");
+      setTimeout(()=>blip(660, 0.12, 0.3, "square"), 80);
+      setTimeout(()=>blip(880, 0.1, 0.2, "square"), 180);
+    },
+    // UI click — tiny tick
+    tick: () => blip(600, 0.04, 0.15, "sine"),
+  };
+}
+const SFX = typeof window !== "undefined" ? createSound() : { swipe:()=>{}, select:()=>{}, tick:()=>{} };
+
 // ─── BRAND ────────────────────────────────────────────────────────────────────
 const B = {
   red:    "#CC1800",
@@ -495,7 +534,9 @@ export default function WhiteStripeMadnessMobile(){
   const [panel,      setPanel]      = useState("STATS");
   const [showFollow,  setShowFollow]  = useState(false);
   const [showInstall, setShowInstall] = useState(false);
-  const [installEvt,  setInstallEvt]  = useState(null);  // beforeinstallprompt event
+  const [installEvt,  setInstallEvt]  = useState(null);
+  const [selected,    setSelected]    = useState(false); // SELECT flash animation
+  const [flashColor,  setFlashColor]  = useState(B.red);
 
   // swipe
   const touchStart = useRef(null);
@@ -537,7 +578,16 @@ export default function WhiteStripeMadnessMobile(){
   // Mobile: NO auto-cycle — user controls manually
   const goTo = i=>{
     if(i === carIdx) return;
+    SFX.swipe();
     setCarIdx(i);
+  };
+
+  const handleSelect = ()=>{
+    SFX.select();
+    // Flash animation — screen briefly lights up in red then fades
+    setSelected(true);
+    setFlashColor(B.red);
+    setTimeout(()=>setSelected(false), 700);
   };
 
   // Swipe handler — only on bottom nav area, NOT on 3D viewer
@@ -578,9 +628,57 @@ export default function WhiteStripeMadnessMobile(){
       <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;0,900;1,700&family=Barlow:wght@400;500&display=swap" rel="stylesheet"/>
       <style>{`
         @keyframes wsm-progress{from{width:0%}to{width:100%}}
+        @keyframes wsm-select-flash{0%{opacity:0}15%{opacity:1}100%{opacity:0}}
+        @keyframes wsm-select-scan{0%{transform:translateY(-100%)}100%{transform:translateY(100vh)}}
         * { -webkit-tap-highlight-color: transparent; box-sizing: border-box; }
         body { margin:0; padding:0; overflow:hidden; }
       `}</style>
+
+      {/* SELECT flash overlay */}
+      {selected && (
+        <div style={{
+          position:"absolute", inset:0, zIndex:200,
+          pointerEvents:"none", overflow:"hidden",
+        }}>
+          {/* Red vignette flash */}
+          <div style={{
+            position:"absolute", inset:0,
+            background:`radial-gradient(ellipse at center, transparent 30%, ${B.red}88 100%)`,
+            animation:"wsm-select-flash 0.7s ease-out forwards",
+          }}/>
+          {/* Scan line sweep */}
+          <div style={{
+            position:"absolute", left:0, right:0, height:3,
+            background:`linear-gradient(90deg, transparent, ${B.red}, ${B.white}, ${B.red}, transparent)`,
+            boxShadow:`0 0 20px ${B.red}`,
+            animation:"wsm-select-scan 0.5s ease-in forwards",
+          }}/>
+          {/* Corner brackets — NFS style selection confirm */}
+          {[
+            {top:20,left:20,borderTop:`3px solid ${B.red}`,borderLeft:`3px solid ${B.red}`},
+            {top:20,right:20,borderTop:`3px solid ${B.red}`,borderRight:`3px solid ${B.red}`},
+            {bottom:90,left:20,borderBottom:`3px solid ${B.red}`,borderLeft:`3px solid ${B.red}`},
+            {bottom:90,right:20,borderBottom:`3px solid ${B.red}`,borderRight:`3px solid ${B.red}`},
+          ].map((s,i)=>(
+            <div key={i} style={{
+              position:"absolute", width:24, height:24,
+              ...s,
+              animation:"wsm-select-flash 0.7s ease-out forwards",
+            }}/>
+          ))}
+          {/* SELECTED text */}
+          <div style={{
+            position:"absolute", top:"50%", left:"50%",
+            transform:"translate(-50%,-50%)",
+            fontFamily:"'Barlow Condensed',sans-serif",
+            fontSize:48, fontWeight:900, letterSpacing:"0.2em",
+            color:B.white, textTransform:"uppercase",
+            textShadow:`0 0 30px ${B.red}, 0 0 60px ${B.red}`,
+            animation:"wsm-select-flash 0.7s ease-out forwards",
+            whiteSpace:"nowrap",
+          }}>SELECTED</div>
+        </div>
+      )}
 
       {/* Follow screen overlay */}
       {showFollow && <FollowScreen onBack={()=>{ setShowFollow(false); setCarIdx(0); }}/>}
@@ -795,6 +893,28 @@ export default function WhiteStripeMadnessMobile(){
             ))}
           </div>
         )}
+      </div>
+
+      {/* ── SELECT BUTTON ── */}
+      <div style={{ flexShrink:0, padding:"8px 16px 4px", background:"rgba(0,0,0,0.6)" }}>
+        <button onClick={handleSelect} style={{
+          width:"100%", padding:"12px 0",
+          background:`linear-gradient(135deg, ${B.redDim}, ${B.red})`,
+          border:`1px solid ${B.red}`,
+          borderRadius:3, cursor:"pointer",
+          fontFamily:"'Barlow Condensed',sans-serif",
+          fontSize:14, fontWeight:900, letterSpacing:"0.3em",
+          color:B.white, textTransform:"uppercase",
+          boxShadow:`0 0 20px rgba(204,24,0,0.4)`,
+          display:"flex", alignItems:"center", justifyContent:"center", gap:10,
+          transition:"all 0.15s",
+          position:"relative", overflow:"hidden",
+        }}>
+          {/* Button scanline */}
+          <div style={{position:"absolute",inset:0,backgroundImage:"repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(255,255,255,0.03) 3px,rgba(255,255,255,0.03) 4px)",pointerEvents:"none"}}/>
+          <span style={{fontSize:18}}>▶</span>
+          SELECT — {car.year} {car.model}
+        </button>
       </div>
 
       {/* ── BOTTOM NAV — car dots + progress ── */}
